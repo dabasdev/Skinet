@@ -1,3 +1,5 @@
+using Api.Helpers;
+using AutoMapper;
 using Core.Interfaces;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Builder;
@@ -23,8 +25,11 @@ namespace Api
         {
             services.AddControllers();
 
+            services.AddAutoMapper(typeof(MappingProfiles));
+
             services.AddScoped<IProductRepository, ProductRepository>();
 
+            services.AddScoped(typeof(IGenericRepository<>) , typeof(GenericRepository<>));
 
             services.AddDbContext<StoreContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("MyConnection")));
@@ -41,6 +46,8 @@ namespace Api
             app.UseHttpsRedirection();
 
             app.UseRouting();
+
+            app.UseStaticFiles();
 
             app.UseAuthorization();
 

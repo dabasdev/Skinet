@@ -1,13 +1,19 @@
+using Api.Errors;
 using Api.Helpers;
+using Api.Middleware;
 using AutoMapper;
 using Core.Interfaces;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using System.Linq;
+using Api.Extensions;
+using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.Swagger;
 
 namespace Api
 {
@@ -27,21 +33,21 @@ namespace Api
 
             services.AddAutoMapper(typeof(MappingProfiles));
 
-            services.AddScoped<IProductRepository, ProductRepository>();
-
-            services.AddScoped(typeof(IGenericRepository<>) , typeof(GenericRepository<>));
-
             services.AddDbContext<StoreContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("MyConnection")));
+
+            services.AddApplicationServices();
+
+            services.AddSwaggerDocumentation();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
+            app.UseMiddleware<ExceptionMiddleware>();
+            
+            app.UseStatusCodePagesWithRedirects("/errors/{0}");
 
             app.UseHttpsRedirection();
 
@@ -50,6 +56,8 @@ namespace Api
             app.UseStaticFiles();
 
             app.UseAuthorization();
+
+            app.UseSwaggerDocumentation();
 
             app.UseEndpoints(endpoints =>
             {
